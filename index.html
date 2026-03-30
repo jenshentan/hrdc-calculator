@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HRDC Pricing Calculator — Trident Talents</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0f13;--bg2:#16181f;--bg3:#1e2029;--bg4:#252836;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--accent:#00d4a0;--accent2:#0098ff;--warn:#f5a623;--danger:#ff4d4d;--purple:#a78bfa;--text:#f0f0f0;--muted:#888ca0;--mono:'DM Mono',monospace;--sans:'Syne',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:stretch;justify-content:space-between;gap:16px;}
+.header-brand{display:flex;align-items:center;gap:10px;padding:12px 0;flex-shrink:0;}
+.logo{width:30px;height:30px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+.logo svg{width:16px;height:16px;fill:#0e0f13;}
+.header h1{font-size:14px;font-weight:600;}
+.header p{font-size:11px;color:var(--muted);}
+.nav-tabs{display:flex;align-items:stretch;gap:0;flex:1;justify-content:center;}
+.nav-tab{padding:0 18px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px;transition:all 0.15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--sans);letter-spacing:0.02em;}
+.nav-tab.on{color:var(--accent);border-bottom-color:var(--accent);}
+.nav-tab:hover{color:var(--text);}
+.header-actions{display:flex;align-items:center;gap:8px;padding:12px 0;flex-shrink:0;}
+.btn{padding:7px 14px;border-radius:7px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text);display:flex;align-items:center;gap:5px;transition:all 0.15s;white-space:nowrap;}
+.btn:hover{background:var(--bg4);}
+.btn.primary{background:var(--accent);color:#0e0f13;border-color:var(--accent);}
+.btn.primary:hover{opacity:0.88;}
+.btn.danger-btn{border-color:rgba(255,77,77,0.4);color:var(--danger);}
+.btn.danger-btn:hover{background:rgba(255,77,77,0.1);}
+.page{display:none;width:100%;}
+.page.on{display:flex;}
+
+/* ── CALCULATOR ── */
+.calc-layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 54px);width:100%;}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:18px;overflow-y:auto;max-height:calc(100vh - 54px);}
+.content{padding:18px;overflow-y:auto;max-height:calc(100vh - 54px);}
+.sec{margin-bottom:22px;}
+.sec-title{font-size:9px;font-weight:700;letter-spacing:0.14em;color:var(--muted);text-transform:uppercase;margin-bottom:9px;}
+.field{margin-bottom:10px;}
+.field label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px;}
+.field input,.field select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--mono);font-size:13px;padding:7px 10px;outline:none;transition:border-color 0.15s;}
+.field input:focus,.field select:focus{border-color:var(--accent);}
+.field select option{background:var(--bg3);}
+.pax-big{font-size:42px;font-weight:700;font-family:var(--mono);color:var(--accent);line-height:1;margin-bottom:2px;}
+.pax-sub{font-size:11px;color:var(--muted);margin-bottom:9px;}
+input[type=range]{width:100%;height:4px;appearance:none;background:var(--bg3);border-radius:2px;outline:none;cursor:pointer;margin-bottom:7px;}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:15px;height:15px;border-radius:50%;background:var(--accent);cursor:pointer;}
+.dur-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;}
+.dur-btn{background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--muted);font-family:var(--sans);font-size:11px;font-weight:600;padding:7px 3px;cursor:pointer;text-align:center;transition:all 0.15s;}
+.dur-btn.on{background:rgba(0,212,160,0.12);border-color:var(--accent);color:var(--accent);}
+.row2{display:flex;gap:7px;}.row2 .field{flex:1;}
+.tog-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.tog-row span{font-size:12px;color:var(--text);}
+.tgl{position:relative;width:32px;height:18px;flex-shrink:0;}
+.tgl input{opacity:0;width:0;height:0;}
+.tgl-track{position:absolute;inset:0;background:var(--bg3);border-radius:20px;cursor:pointer;border:1px solid var(--border2);transition:background 0.2s;}
+.tgl-track:before{content:'';position:absolute;width:12px;height:12px;left:2px;top:2px;background:var(--muted);border-radius:50%;transition:all 0.2s;}
+.tgl input:checked+.tgl-track{background:rgba(0,212,160,0.2);border-color:var(--accent);}
+.tgl input:checked+.tgl-track:before{transform:translateX(14px);background:var(--accent);}
+.sub-f{padding-left:10px;border-left:2px solid var(--border2);margin:3px 0 8px;}
+
+/* metrics */
+.m4{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px;}
+.met{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:13px;}
+.met.hi{border-color:var(--accent);background:rgba(0,212,160,0.06);}
+.met.wa{border-color:var(--warn);background:rgba(245,166,35,0.06);}
+.met.ba{border-color:var(--danger);background:rgba(255,77,77,0.06);}
+.ml{font-size:10px;color:var(--muted);margin-bottom:4px;}
+.mv{font-size:19px;font-weight:700;font-family:var(--mono);}
+.ms{font-size:10px;color:var(--muted);margin-top:3px;}
+.g{color:var(--accent);}.b{color:var(--accent2);}.w{color:var(--warn);}.r{color:var(--danger);}.pp{color:var(--purple);}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:13px;overflow:hidden;}
+.ph{padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.ph h3{font-size:12px;font-weight:600;}
+.pb{padding:13px 15px;}
+.slot-hdr{display:grid;grid-template-columns:48px 75px 58px 115px 115px 1fr;gap:6px;padding:0 0 8px;border-bottom:1px solid var(--border2);font-size:9px;color:var(--muted);letter-spacing:0.09em;text-transform:uppercase;}
+.slot-row{display:grid;grid-template-columns:48px 75px 58px 115px 115px 1fr;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;font-family:var(--mono);}
+.slot-row:last-child{border-bottom:none;}
+.badge{display:inline-block;padding:2px 7px;border-radius:99px;font-size:9px;font-weight:700;font-family:var(--sans);}
+.bg{background:rgba(0,212,160,0.15);color:var(--accent);}
+.ba2{background:rgba(245,166,35,0.15);color:var(--warn);}
+.bb{background:rgba(0,152,255,0.15);color:var(--accent2);}
+.bdr{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.bdr:last-child{border-bottom:none;font-size:14px;font-weight:700;}
+.bdr span:first-child{color:var(--muted);}
+.bdr span:last-child{font-family:var(--mono);}
+.bdr.tot span:last-child{color:var(--accent);}
+.bg2{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.bi{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 11px;}
+.bi.bit{background:rgba(0,212,160,0.08);border-color:var(--accent);}
+.bil{font-size:9px;color:var(--muted);margin-bottom:2px;}
+.biv{font-size:14px;font-weight:700;font-family:var(--mono);color:var(--accent2);}
+.bi.bit .biv{color:var(--accent);}
+.bis{font-size:9px;color:var(--muted);margin-top:2px;}
+.ins{border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:9px 13px;font-size:12px;margin-bottom:13px;background:rgba(0,212,160,0.08);color:#a0f0dc;line-height:1.6;}
+.ins.wa{border-left-color:var(--warn);background:rgba(245,166,35,0.08);color:#f5d490;}
+.ins.ba{border-left-color:var(--danger);background:rgba(255,77,77,0.08);color:#ffaaaa;}
+.pbar-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:13px;}
+.bar-track{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-bottom:6px;position:relative;}
+.bar-fill{height:100%;border-radius:3px;transition:width 0.3s,background 0.3s;}
+.bar-mk{position:absolute;top:0;width:1px;height:100%;background:rgba(255,255,255,0.25);}
+.bar-lbs{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-family:var(--mono);}
+
+/* ── TARGETS ── */
+.tgt-layout{width:100%;padding:18px;overflow-y:auto;}
+.tgt3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+.tgt-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:15px;}
+.tgt-card-title{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:11px;}
+.tgt-inp-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.tgt-inp-row label{font-size:11px;color:var(--muted);flex-shrink:0;width:56px;}
+.tgt-inp-row input{flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--mono);font-size:13px;padding:6px 9px;outline:none;}
+.tgt-inp-row input:focus{border-color:var(--accent);}
+.prog-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;font-family:var(--mono);}
+.prog-track{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:3px;transition:width 0.4s;}
+.prog-stat{font-size:13px;font-weight:700;font-family:var(--mono);margin-top:5px;}
+
+/* ── DEALS ── */
+.db-layout{width:100%;padding:18px;overflow-y:auto;}
+.db5{display:grid;grid-template-columns:repeat(5,1fr);gap:9px;margin-bottom:16px;}
+.add-form{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;}
+.fg{display:grid;gap:9px;margin-bottom:9px;}
+.fg4{grid-template-columns:repeat(4,1fr);}
+.fg3{grid-template-columns:repeat(3,1fr);}
+.fg5{grid-template-columns:repeat(5,1fr);}
+.frm-field label{font-size:10px;color:var(--muted);display:block;margin-bottom:3px;}
+.frm-field input,.frm-field select{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;padding:6px 9px;outline:none;}
+.frm-field input:focus,.frm-field select:focus{border-color:var(--accent);}
+.frm-field select option{background:var(--bg3);}
+.f-row{display:flex;gap:9px;align-items:flex-end;flex-wrap:wrap;}
+.tbl-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:auto;}
+table.dt{width:100%;border-collapse:collapse;font-size:11px;min-width:1100px;}
+table.dt th{background:var(--bg3);padding:8px 10px;text-align:left;font-size:9px;color:var(--muted);letter-spacing:0.09em;text-transform:uppercase;border-bottom:1px solid var(--border2);font-weight:700;}
+table.dt td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle;}
+table.dt tr:last-child td{border-bottom:none;}
+table.dt tr:hover td{background:rgba(255,255,255,0.015);}
+.sp{display:inline-block;padding:2px 8px;border-radius:99px;font-size:9px;font-weight:700;}
+.s-confirmed{background:rgba(0,212,160,0.15);color:var(--accent);}
+.s-pending{background:rgba(245,166,35,0.15);color:var(--warn);}
+.s-completed{background:rgba(0,152,255,0.15);color:var(--accent2);}
+.s-cancelled{background:rgba(255,77,77,0.15);color:var(--danger);}
+.del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:4px;}
+.del:hover{color:var(--danger);background:rgba(255,77,77,0.1);}
+.empty{text-align:center;padding:36px;color:var(--muted);font-size:13px;}
+.pg-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.pg-hdr-left h2{font-size:15px;font-weight:600;}
+.pg-hdr-left p{font-size:11px;color:var(--muted);margin-top:2px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-brand">
+    <div class="logo"><svg viewBox="0 0 20 20"><path d="M10 2L2 7v6l8 5 8-5V7L10 2zm0 2.5l5.5 3.4v4.2L10 15.5l-5.5-3.4V7.9L10 4.5z"/></svg></div>
+    <div><h1>HRDC Pricing Calculator</h1><p>Trident Talents</p></div>
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-tab on" onclick="showPage('calc',this)">&#9783; Calculator</button>
+    <button class="nav-tab" onclick="showPage('targets',this)">&#9678; Sales Targets</button>
+    <button class="nav-tab" onclick="showPage('deals',this)">&#9776; Deals Database</button>
+  </nav>
+  <div class="header-actions">
+    <button class="btn" onclick="window.print()">&#128438; Print</button>
+    <button class="btn primary" onclick="addDealFromCalc()">+ Save as Deal</button>
+  </div>
+</div>
+
+<!-- ════════════════ CALCULATOR PAGE ════════════════ -->
+<div class="page on" id="page-calc">
+<div class="calc-layout">
+  <div class="sidebar">
+
+    <div class="sec">
+      <div class="sec-title">Group size</div>
+      <div class="pax-big" id="pax-disp">50</div>
+      <div class="pax-sub">participants</div>
+      <input type="range" id="pax-slider" min="15" max="700" step="1" value="50" oninput="syncPax('s')">
+      <div class="field"><label>Exact pax count</label><input type="number" id="pax-num" min="15" max="700" value="50" oninput="syncPax('n')"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">Duration</div>
+      <div class="dur-grid">
+        <div class="dur-btn on" data-d="1" onclick="setDur(1,this)">1 day</div>
+        <div class="dur-btn" data-d="1.5" onclick="setDur(1.5,this)">1.5 days</div>
+        <div class="dur-btn" data-d="2" onclick="setDur(2,this)">2 days</div>
+        <div class="dur-btn" data-d="2.5" onclick="setDur(2.5,this)">2.5 days</div>
+        <div class="dur-btn" data-d="3" onclick="setDur(3,this)">3 days</div>
+        <div class="dur-btn" data-d="3.5" onclick="setDur(3.5,this)">3.5 days</div>
+        <div class="dur-btn" data-d="4" onclick="setDur(4,this)">4 days</div>
+        <div class="dur-btn" data-d="4.5" onclick="setDur(4.5,this)">4.5 days</div>
+        <div class="dur-btn" data-d="5" onclick="setDur(5,this)">5 days</div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">Pricing parameters</div>
+      <div class="row2">
+        <div class="field"><label>Floor/slot (RM)</label><input type="number" id="floor-val" value="7000" step="100" min="1000" max="9722" oninput="render()"></div>
+        <div class="field"><label>Pax per slot</label><input type="number" id="slot-size" value="50" step="1" min="10" max="100" oninput="render()"></div>
+      </div>
+      <div class="field"><label>HRDC cap per slot/day (RM)</label><input type="number" id="hrdc-cap" value="10500" step="100" oninput="render()"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">Optional budgets</div>
+      <div class="tog-row"><span>Top 3 Team Prizes</span><label class="tgl"><input type="checkbox" id="tog-prizes" onchange="toggleSub('sf-prizes',this);render()"><span class="tgl-track"></span></label></div>
+      <div class="sub-f" id="sf-prizes" style="display:none"><div class="field"><label>Max % of net margin</label><input type="number" id="prizes-pct" value="10" step="1" oninput="render()"></div></div>
+      <div class="tog-row"><span>Banner</span><label class="tgl"><input type="checkbox" id="tog-banner" onchange="toggleSub('sf-banner',this);render()"><span class="tgl-track"></span></label></div>
+      <div class="sub-f" id="sf-banner" style="display:none"><div class="field"><label>Fixed budget (RM)</label><input type="number" id="banner-amt" value="200" step="50" oninput="render()"></div></div>
+      <div class="tog-row"><span>T-Shirts (subject to approval)</span><label class="tgl"><input type="checkbox" id="tog-tshirt" onchange="toggleSub('sf-tshirt',this);render()"><span class="tgl-track"></span></label></div>
+      <div class="sub-f" id="sf-tshirt" style="display:none"><div class="field"><label>Rate/pax (RM)</label><input type="number" id="tshirt-rate" value="35" step="1" oninput="render()"></div></div>
+      <div class="tog-row"><span>Marketing budget</span><label class="tgl"><input type="checkbox" id="tog-mktg" onchange="toggleSub('sf-mktg',this);render()"><span class="tgl-track"></span></label></div>
+      <div class="sub-f" id="sf-mktg" style="display:none"><div class="field"><label>% of net margin</label><input type="number" id="mktg-pct" value="10" step="1" oninput="render()"></div></div>
+      <div class="tog-row"><span>Training team budget</span><label class="tgl"><input type="checkbox" id="tog-team" onchange="toggleSub('sf-team',this);render()"><span class="tgl-track"></span></label></div>
+      <div class="sub-f" id="sf-team" style="display:none"><div class="field"><label>% of net margin</label><input type="number" id="team-pct" value="50" step="1" oninput="render()"></div></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-title">Profit targets</div>
+      <div class="row2">
+        <div class="field"><label>Min margin %</label><input type="number" id="margin-min" value="35" step="1" oninput="render()"></div>
+        <div class="field"><label>Max margin %</label><input type="number" id="margin-max" value="45" step="1" oninput="render()"></div>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+  <div class="content">
+    <div class="m4" id="metrics"></div>
+    <div class="pbar-wrap" id="pbar"></div>
+    <div id="ins-box"></div>
+    <div class="panel">
+      <div class="ph"><h3>Slot breakdown</h3><span id="slot-sum" style="font-size:11px;color:var(--muted)"></span></div>
+      <div class="pb">
+        <div class="slot-hdr"><div>Slot</div><div>Pax</div><div>Density</div><div>Pre-SST (RM)</div><div>Invoice w/SST</div><div>Type</div></div>
+        <div id="slot-rows"></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px;">
+      <div class="panel"><div class="ph"><h3>Invoice breakdown</h3></div><div class="pb" id="breakdown"></div></div>
+      <div class="panel"><div class="ph"><h3>Budget allocation</h3></div><div class="pb"><div class="bg2" id="budget-grid"></div></div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════ TARGETS PAGE ════════════════ -->
+<div class="page" id="page-targets">
+<div class="tgt-layout">
+  <div class="pg-hdr">
+    <div class="pg-hdr-left"><h2>Sales Targets</h2><p>Set monthly targets and track performance against confirmed deals</p></div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <select id="tgt-month" onchange="renderTargets()" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:12px;padding:6px 9px;border-radius:7px;outline:none;cursor:pointer;">
+        <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+        <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+        <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+        <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+      </select>
+      <input type="number" id="tgt-year" value="2025" min="2020" max="2035" oninput="renderTargets()" style="width:76px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:var(--mono);font-size:12px;padding:6px 9px;border-radius:7px;outline:none;">
+      <button class="btn primary" onclick="saveTargets()">Save Targets</button>
+    </div>
+  </div>
+  <div class="tgt3">
+    <div class="tgt-card">
+      <div class="tgt-card-title">Bookings target</div>
+      <div class="tgt-inp-row"><label>Target</label><input type="number" id="tgt-bookings" value="10" min="0" oninput="renderTargets()"></div>
+      <div id="prog-bookings"></div>
+    </div>
+    <div class="tgt-card">
+      <div class="tgt-card-title">Revenue target (pre-SST)</div>
+      <div class="tgt-inp-row"><label>Target RM</label><input type="number" id="tgt-revenue" value="100000" min="0" oninput="renderTargets()"></div>
+      <div id="prog-revenue"></div>
+    </div>
+    <div class="tgt-card">
+      <div class="tgt-card-title">Avg profit margin target</div>
+      <div class="tgt-inp-row"><label>Target %</label><input type="number" id="tgt-margin" value="40" min="0" max="100" oninput="renderTargets()"></div>
+      <div id="prog-margin"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h3>Monthly deal performance</h3><span id="tgt-month-label" style="font-size:11px;color:var(--muted)"></span></div>
+    <div class="pb" id="monthly-tbl"></div>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════ DEALS DATABASE PAGE ════════════════ -->
+<div class="page" id="page-deals">
+<div class="db-layout">
+  <div class="pg-hdr">
+    <div class="pg-hdr-left"><h2>Confirmed Sales Database</h2><p>All deals saved to browser — persists between sessions</p></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" onclick="exportCSV()">&#128190; Export CSV</button>
+      <button class="btn danger-btn" onclick="clearAll()">Clear All</button>
+    </div>
+  </div>
+  <div class="db5" id="db-summary"></div>
+  <div class="add-form">
+    <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:11px;">Add new deal</div>
+    <div class="fg fg4">
+      <div class="frm-field"><label>Client name</label><input type="text" id="d-client" placeholder="e.g. Petronas HQ"></div>
+      <div class="frm-field"><label>Date</label><input type="date" id="d-date"></div>
+      <div class="frm-field"><label>Pax</label><input type="number" id="d-pax" value="30" min="1"></div>
+      <div class="frm-field"><label>Duration</label>
+        <select id="d-dur">
+          <option value="1">1 day</option><option value="1.5">1.5 days</option><option value="2">2 days</option>
+          <option value="2.5">2.5 days</option><option value="3">3 days</option><option value="3.5">3.5 days</option>
+          <option value="4">4 days</option><option value="4.5">4.5 days</option><option value="5">5 days</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg fg4">
+      <div class="frm-field"><label>Pre-SST (RM)</label><input type="number" id="d-presst" value="0" step="0.01"></div>
+      <div class="frm-field"><label>Net revenue (RM)</label><input type="number" id="d-netrev" value="0" step="0.01"></div>
+      <div class="frm-field"><label>Profit margin (%)</label><input type="number" id="d-margin" value="0" step="0.01"></div>
+      <div class="frm-field"><label>Status</label>
+        <select id="d-status">
+          <option value="confirmed">Confirmed</option><option value="pending">Pending</option>
+          <option value="completed">Completed</option><option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg fg5">
+      <div class="frm-field"><label>Prizes (RM)</label><input type="number" id="d-prizes" value="0" step="0.01"></div>
+      <div class="frm-field"><label>Banner (RM)</label><input type="number" id="d-banner" value="0" step="0.01"></div>
+      <div class="frm-field"><label>T-Shirts (RM)</label><input type="number" id="d-tshirt" value="0" step="0.01"></div>
+      <div class="frm-field"><label>Marketing (RM)</label><input type="number" id="d-mktg" value="0" step="0.01"></div>
+      <div class="frm-field"><label>Team budget (RM)</label><input type="number" id="d-team" value="0" step="0.01"></div>
+    </div>
+    <div class="f-row">
+      <div class="frm-field" style="flex:1"><label>Notes</label><input type="text" id="d-notes" placeholder="Optional notes..."></div>
+      <button class="btn primary" style="flex-shrink:0" onclick="addDeal()">Add Deal</button>
+    </div>
+  </div>
+  <div class="tbl-wrap">
+    <table class="dt">
+      <thead><tr>
+        <th>Client</th><th>Date</th><th>Pax</th><th>Dur</th>
+        <th>Pre-SST</th><th>Net Rev</th><th>Margin</th>
+        <th>Prizes</th><th>Banner</th><th>T-Shirts</th><th>Mktg</th><th>Team</th>
+        <th>Status</th><th>Notes</th><th></th>
+      </tr></thead>
+      <tbody id="deals-tbody"></tbody>
+    </table>
+    <div id="deals-empty" class="empty" style="display:none">No deals yet. Add your first deal above, or use "Save as Deal" from the calculator tab.</div>
+  </div>
+</div>
+</div>
+
+<script>
+// ── STATE ──
+let curPax=50,curDur=1;
+let _deals=[],_targets={};
+
+// ── API HELPERS ──
+async function apiDeals(method,body){
+  const opts={method,headers:{'Content-Type':'application/json'}};
+  if(body)opts.body=JSON.stringify(body);
+  const r=await fetch('/api/deals',opts);
+  if(!r.ok){const e=await r.json();throw new Error(e.error||'API error');}
+  return r.json();
+}
+async function apiTargets(method,body){
+  const opts={method,headers:{'Content-Type':'application/json'}};
+  if(body)opts.body=JSON.stringify(body);
+  const r=await fetch('/api/targets',opts);
+  if(!r.ok){const e=await r.json();throw new Error(e.error||'API error');}
+  return r.json();
+}
+
+function setLoading(msg){
+  let el=document.getElementById('global-status');
+  if(!el){el=document.createElement('div');el.id='global-status';el.style.cssText='position:fixed;bottom:16px;right:16px;background:var(--bg2);border:1px solid var(--border2);color:var(--muted);font-size:12px;padding:8px 14px;border-radius:8px;z-index:999;font-family:var(--mono);';document.body.appendChild(el);}
+  if(msg){el.textContent=msg;el.style.display='block';}else{el.style.display='none';}
+}
+
+// ── UTILS ──
+function fmt(n){return 'RM '+parseFloat(n||0).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function p2(n){return parseFloat(n||0).toFixed(2)+'%';}
+function gv(id){return parseFloat(document.getElementById(id).value)||0;}
+function gs(id){return document.getElementById(id).value.trim();}
+function ck(id){return document.getElementById(id).checked;}
+function toggleSub(id,cb){document.getElementById(id).style.display=cb.checked?'block':'none';}
+
+// ── NAV ──
+function showPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('page-'+name).classList.add('on');
+  el.classList.add('on');
+  if(name==='targets')renderTargets();
+  if(name==='deals')renderDeals();
+}
+
+// ── CALC CORE ──
+function syncPax(src){
+  if(src==='s'){curPax=parseInt(document.getElementById('pax-slider').value);document.getElementById('pax-num').value=curPax;}
+  else{curPax=Math.min(700,Math.max(15,parseInt(document.getElementById('pax-num').value)||15));document.getElementById('pax-slider').value=curPax;}
+  document.getElementById('pax-disp').textContent=curPax;
+  render();
+}
+function setDur(d,el){curDur=d;document.querySelectorAll('.dur-btn').forEach(b=>b.classList.toggle('on',parseFloat(b.dataset.d)===d));render();}
+function slotPx(pInSlot,floor,ceil,ss){return Math.max(floor,Math.min(ceil,ceil*(pInSlot/ss)));}
+
+function calcDeal(){
+  const floor=gv('floor-val'),ss=gv('slot-size')||50,capPS=gv('hrdc-cap')||10500,ceil=capPS/1.08;
+  const fs=Math.floor(curPax/ss),rem=curPax%ss,slots=[];
+  for(let i=0;i<fs;i++)slots.push({n:i+1,pax:ss,dens:100,price:slotPx(ss,floor,ceil,ss)*curDur,type:'full'});
+  if(rem>0){const p=slotPx(rem,floor,ceil,ss)*curDur;slots.push({n:fs+1,pax:rem,dens:Math.round(rem/ss*100),price:p,type:p<=floor*curDur?'floor':'partial'});}
+  const preSST=slots.reduce((a,s)=>a+s.price,0);
+  const sst=preSST*0.08,invoice=preSST+sst,hrdcCap=slots.length*capPS*curDur;
+  const netRev=invoice*0.96-sst;
+  const prizes=ck('tog-prizes')?netRev*(gv('prizes-pct')/100):0;
+  const banner=ck('tog-banner')?gv('banner-amt'):0;
+  const tshirt=ck('tog-tshirt')?gv('tshirt-rate')*curPax:0;
+  const mktg=ck('tog-mktg')?netRev*(gv('mktg-pct')/100):0;
+  const team=ck('tog-team')?netRev*(gv('team-pct')/100):0;
+  const budg=prizes+banner+tshirt+mktg+team;
+  const net2=netRev-budg;
+  const margin=preSST>0?(net2/preSST)*100:0;
+  return{slots,preSST,sst,invoice,hrdcCap,netRev,prizes,banner,tshirt,mktg,team,budg,net2,margin};
+}
+
+function render(){
+  const d=calcDeal(),mn=gv('margin-min'),mx=gv('margin-max'),over=d.invoice>d.hrdcCap;
+  const mc=d.margin>=mn&&d.margin<=mx?'g':d.margin<mn?'r':'w';
+  // metrics — all values with 2dp
+  document.getElementById('metrics').innerHTML=`
+    <div class="met hi"><div class="ml">Pre-SST quote</div><div class="mv b">${fmt(d.preSST)}</div><div class="ms">${d.slots.length} slot${d.slots.length>1?'s':''} · ${curDur}d · ${curPax} pax</div></div>
+    <div class="met ${over?'ba':''}"><div class="ml">Invoice to client</div><div class="mv ${over?'r':'g'}">${fmt(d.invoice)}</div><div class="ms">HRDC cap: ${fmt(d.hrdcCap)}</div></div>
+    <div class="met hi"><div class="ml">Net revenue</div><div class="mv g">${fmt(d.netRev)}</div><div class="ms">After SST + 4% HRDC cut</div></div>
+    <div class="met ${mc==='r'?'ba':mc==='w'?'wa':'hi'}"><div class="ml">Profit margin</div><div class="mv ${mc}">${p2(d.margin)}</div><div class="ms">Target: ${mn}–${mx}%</div></div>`;
+  // bar
+  const bw=Math.min(100,Math.max(0,d.margin)).toFixed(2);
+  const bc=d.margin>=mn&&d.margin<=mx?'#00d4a0':d.margin<mn?'#ff4d4d':'#f5a623';
+  document.getElementById('pbar').innerHTML=`
+    <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">Profit margin — target zone ${mn}% to ${mx}%</div>
+    <div class="bar-track"><div class="bar-mk" style="left:${mn}%"></div><div class="bar-mk" style="left:${mx}%"></div><div class="bar-fill" style="width:${bw}%;background:${bc}"></div></div>
+    <div class="bar-lbs"><span>0%</span><span>${mn}% min</span><span>${mx}% max</span><span>100%</span></div>
+    <div style="font-size:10px;color:${bc};margin-top:4px;">${p2(d.margin)} — ${d.margin<mn?'Below target':d.margin>mx?'Above target':'Within target range'}</div>`;
+  // insight
+  const ib=document.getElementById('ins-box');
+  if(over){ib.innerHTML=`<div class="ins ba">Invoice ${fmt(d.invoice)} exceeds HRDC cap ${fmt(d.hrdcCap)}. Max pre-SST allowed: ${fmt(d.hrdcCap/1.08)}.</div>`;}
+  else if(d.margin<mn){ib.innerHTML=`<div class="ins wa">Margin ${p2(d.margin)} below ${mn}% target. Total budgets: ${fmt(d.budg)}. Reduce allocations or increase price.</div>`;}
+  else{ib.innerHTML=`<div class="ins">Using ${p2(d.invoice/d.hrdcCap*100)} of HRDC cap · Net ${fmt(d.netRev)} · After budgets: ${fmt(d.net2)} · Margin ${p2(d.margin)} — on target.</div>`;}
+  // slots
+  document.getElementById('slot-sum').textContent=`${d.slots.length} slot${d.slots.length>1?'s':''} · ${curPax} pax · ${curDur}d`;
+  document.getElementById('slot-rows').innerHTML=d.slots.map(s=>{
+    const inv=s.price*1.08;
+    const badge=s.type==='full'?`<span class="badge bg">Full slot</span>`:s.type==='floor'?`<span class="badge bb">Floor applied</span>`:`<span class="badge ba2">Pro-rated</span>`;
+    return `<div class="slot-row"><div style="color:var(--accent2);font-weight:600">S${s.n}</div><div>${s.pax} pax</div><div>${s.dens}%</div><div>${fmt(s.price)}</div><div>${fmt(inv)}</div><div>${badge}</div></div>`;
+  }).join('');
+  // breakdown — all 2dp
+  document.getElementById('breakdown').innerHTML=`
+    <div class="bdr"><span>Pre-SST total</span><span>${fmt(d.preSST)}</span></div>
+    <div class="bdr"><span>SST (8%)</span><span>+ ${fmt(d.sst)}</span></div>
+    <div class="bdr"><span>Invoice to client</span><span>${fmt(d.invoice)}</span></div>
+    <div class="bdr"><span style="color:var(--danger)">Less: 4% HRDC cut</span><span style="color:var(--danger)">− ${fmt(d.invoice*0.04)}</span></div>
+    <div class="bdr"><span style="color:var(--danger)">Less: SST remitted</span><span style="color:var(--danger)">− ${fmt(d.sst)}</span></div>
+    <div class="bdr"><span>Net revenue</span><span class="g">${fmt(d.netRev)}</span></div>
+    ${d.budg>0?`<div class="bdr"><span style="color:var(--danger)">Less: budgets</span><span style="color:var(--danger)">− ${fmt(d.budg)}</span></div>`:''}
+    <div class="bdr tot"><span>Net after budgets</span><span>${fmt(d.net2)}</span></div>`;
+  // budgets
+  const bi=[];
+  if(ck('tog-prizes'))bi.push({l:'Team prizes ('+gv('prizes-pct')+'%)',v:d.prizes,s:'Max 3 prizes'});
+  if(ck('tog-banner'))bi.push({l:'Banner',v:d.banner,s:'Fixed budget'});
+  if(ck('tog-tshirt'))bi.push({l:'T-Shirts',v:d.tshirt,s:'RM'+gv('tshirt-rate')+' × '+curPax+' pax'});
+  if(ck('tog-mktg'))bi.push({l:'Marketing ('+gv('mktg-pct')+'%)',v:d.mktg,s:'% of net'});
+  if(ck('tog-team'))bi.push({l:'Training team ('+gv('team-pct')+'%)',v:d.team,s:'% of net'});
+  bi.push({l:'Total budgets',v:d.budg,s:'Net: '+fmt(d.net2),c:'bit'});
+  document.getElementById('budget-grid').innerHTML=bi.length===1
+    ?`<div class="bi" style="grid-column:1/-1"><div class="bil">No budgets enabled</div><div class="biv">RM 0.00</div><div class="bis">Toggle items in sidebar</div></div>`
+    :bi.map(b=>`<div class="bi ${b.c||''}"><div class="bil">${b.l}</div><div class="biv">${fmt(b.v)}</div><div class="bis">${b.s}</div></div>`).join('');
+}
+
+// ── SAVE AS DEAL ──
+function addDealFromCalc(){
+  const d=calcDeal(),today=new Date().toISOString().split('T')[0];
+  document.getElementById('d-client').value='';
+  document.getElementById('d-date').value=today;
+  document.getElementById('d-pax').value=curPax;
+  document.getElementById('d-dur').value=curDur;
+  document.getElementById('d-presst').value=p2(d.preSST).replace('%','');
+  document.getElementById('d-netrev').value=p2(d.netRev).replace('%','');
+  document.getElementById('d-margin').value=parseFloat(d.margin).toFixed(2);
+  document.getElementById('d-prizes').value=parseFloat(d.prizes).toFixed(2);
+  document.getElementById('d-banner').value=parseFloat(d.banner).toFixed(2);
+  document.getElementById('d-tshirt').value=parseFloat(d.tshirt).toFixed(2);
+  document.getElementById('d-mktg').value=parseFloat(d.mktg).toFixed(2);
+  document.getElementById('d-team').value=parseFloat(d.team).toFixed(2);
+  document.getElementById('d-status').value='confirmed';
+  // fix: set numeric values properly
+  document.getElementById('d-presst').value=d.preSST.toFixed(2);
+  document.getElementById('d-netrev').value=d.netRev.toFixed(2);
+  showPage('deals',document.querySelectorAll('.nav-tab')[2]);
+  setTimeout(()=>document.getElementById('d-client').focus(),100);
+}
+
+// ── DEALS DB ──
+function addDeal(){
+  const client=gs('d-client');if(!client){alert('Please enter a client name.');return;}
+  const deal={id:Date.now(),client,date:gs('d-date'),pax:gv('d-pax'),dur:parseFloat(document.getElementById('d-dur').value),
+    preSST:gv('d-presst'),netRev:gv('d-netrev'),margin:gv('d-margin'),status:gs('d-status'),
+    prizes:gv('d-prizes'),banner:gv('d-banner'),tshirt:gv('d-tshirt'),mktg:gv('d-mktg'),team:gv('d-team'),notes:gs('d-notes')};
+  const deals=loadDeals();deals.unshift(deal);saveDeals(deals);
+  document.getElementById('d-client').value='';document.getElementById('d-notes').value='';
+  renderDeals();
+}
+async function deleteDeal(id){
+  if(!confirm('Delete this deal?'))return;
+  setLoading('Deleting...');
+  try{await apiDeals('DELETE',{id});_deals=_deals.filter(d=>d.id!==id);renderDealsUI();renderTargets();}
+  catch(e){alert('Error: '+e.message);}
+  finally{setLoading(null);}
+}
+async function updStatus(id,val){
+  setLoading('Updating...');
+  try{await apiDeals('PATCH',{id,status:val});const d=_deals.find(x=>x.id===id);if(d)d.status=val;renderDealsUI();renderTargets();}
+  catch(e){alert('Error: '+e.message);}
+  finally{setLoading(null);}
+}
+async function clearAll(){
+  if(!confirm('Clear ALL deals from the database? This cannot be undone.'))return;
+  setLoading('Clearing...');
+  try{
+    for(const d of _deals){await apiDeals('DELETE',{id:d.id});}
+    _deals=[];renderDealsUI();renderTargets();
+  }catch(e){alert('Error: '+e.message);}
+  finally{setLoading(null);}
+}
+
+async function renderDeals(){
+  setLoading('Loading deals...');
+  try{const data=await apiDeals('GET');_deals=data.deals||[];renderDealsUI();}
+  catch(e){document.getElementById('deals-tbody').innerHTML=`<tr><td colspan="15" style="text-align:center;padding:24px;color:var(--danger)">Failed to load deals: ${e.message}</td></tr>`;}
+  finally{setLoading(null);}
+}
+
+function renderDealsUI(){
+  const deals=_deals,tbody=document.getElementById('deals-tbody'),empty=document.getElementById('deals-empty');
+  if(!deals.length){tbody.innerHTML='';empty.style.display='block';}
+  else{
+    empty.style.display='none';
+    tbody.innerHTML=deals.map(d=>`<tr>
+      <td style="font-weight:600">${d.Client||'—'}</td>
+      <td style="color:var(--muted)">${d.Date||'—'}</td>
+      <td style="font-family:var(--mono)">${d.Pax||0}</td>
+      <td style="font-family:var(--mono)">${d.Duration||1}d</td>
+      <td style="font-family:var(--mono)">${fmt(d.PreSST)}</td>
+      <td style="font-family:var(--mono);color:var(--accent)">${fmt(d.NetRev)}</td>
+      <td style="font-family:var(--mono);color:${d.Margin>=35&&d.Margin<=45?'var(--accent)':d.Margin<35?'var(--danger)':'var(--warn)'}">${parseFloat(d.Margin||0).toFixed(2)}%</td>
+      <td style="font-family:var(--mono);color:var(--muted);font-size:11px">${d.Prizes>0?fmt(d.Prizes):'—'}</td>
+      <td style="font-family:var(--mono);color:var(--muted);font-size:11px">${d.Banner>0?fmt(d.Banner):'—'}</td>
+      <td style="font-family:var(--mono);color:var(--muted);font-size:11px">${d.TShirts>0?fmt(d.TShirts):'—'}</td>
+      <td style="font-family:var(--mono);color:var(--muted);font-size:11px">${d.Marketing>0?fmt(d.Marketing):'—'}</td>
+      <td style="font-family:var(--mono);color:var(--muted);font-size:11px">${d.TeamBudget>0?fmt(d.TeamBudget):'—'}</td>
+      <td><select onchange="updStatus('${d.id}',this.value)" style="background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:var(--sans);font-size:10px;padding:3px 5px;border-radius:5px;cursor:pointer;outline:none;">
+        <option value="confirmed" ${d.Status==='confirmed'?'selected':''}>Confirmed</option>
+        <option value="pending" ${d.Status==='pending'?'selected':''}>Pending</option>
+        <option value="completed" ${d.Status==='completed'?'selected':''}>Completed</option>
+        <option value="cancelled" ${d.Status==='cancelled'?'selected':''}>Cancelled</option>
+      </select></td>
+      <td style="color:var(--muted);font-size:10px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.Notes||'—'}</td>
+      <td><button class="del" onclick="deleteDeal('${d.id}')">✕</button></td>
+    </tr>`).join('');
+  }
+  const active=deals.filter(d=>d.Status!=='cancelled');
+  const tRev=active.reduce((a,d)=>a+(d.PreSST||0),0);
+  const tNet=active.reduce((a,d)=>a+(d.NetRev||0),0);
+  const avgM=active.length?active.reduce((a,d)=>a+(d.Margin||0),0)/active.length:0;
+  const conf=deals.filter(d=>d.Status==='confirmed').length,comp=deals.filter(d=>d.Status==='completed').length;
+  document.getElementById('db-summary').innerHTML=`
+    <div class="met"><div class="ml">Total deals</div><div class="mv b">${deals.length}</div><div class="ms">${conf} confirmed · ${comp} completed</div></div>
+    <div class="met"><div class="ml">Total pre-SST</div><div class="mv g">${fmt(tRev)}</div><div class="ms">Active deals</div></div>
+    <div class="met"><div class="ml">Total net revenue</div><div class="mv g">${fmt(tNet)}</div><div class="ms">After all deductions</div></div>
+    <div class="met ${avgM>=35&&avgM<=45?'hi':avgM<35&&active.length?'ba':''}"><div class="ml">Avg margin</div><div class="mv ${avgM>=35?'g':active.length&&avgM<35?'r':'b'}">${parseFloat(avgM).toFixed(2)}%</div><div class="ms">Target: 35–45%</div></div>
+    <div class="met"><div class="ml">Total pax</div><div class="mv pp">${active.reduce((a,d)=>a+(d.pax||0),0)}</div><div class="ms">${active.length} active deals</div></div>`;
+}
+
+// ── TARGETS ──
+async function saveTargets(){
+  const m=document.getElementById('tgt-month').value,y=document.getElementById('tgt-year').value;
+  const monthKey=y+'-'+m;
+  setLoading('Saving targets...');
+  try{
+    await apiTargets('POST',{monthKey,bookings:gv('tgt-bookings'),revenue:gv('tgt-revenue'),margin:gv('tgt-margin')});
+    _targets[monthKey]={bookings:gv('tgt-bookings'),revenue:gv('tgt-revenue'),margin:gv('tgt-margin')};
+    const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1];
+    alert('Targets saved for '+mn+' '+y);
+    renderTargets();
+  }catch(e){alert('Error saving: '+e.message);}
+  finally{setLoading(null);}
+}
+function renderTargets(){
+  const m=document.getElementById('tgt-month').value,y=document.getElementById('tgt-year').value,key=y+'-'+m;
+  if(_targets[key]){document.getElementById('tgt-bookings').value=_targets[key].bookings;document.getElementById('tgt-revenue').value=_targets[key].revenue;document.getElementById('tgt-margin').value=_targets[key].margin;}
+  const tB=gv('tgt-bookings'),tR=gv('tgt-revenue'),tM=gv('tgt-margin');
+  const deals=_deals.filter(d=>{if(!d.Date)return false;const dd=new Date(d.Date);return(dd.getMonth()+1)==parseInt(m)&&dd.getFullYear()==parseInt(y)&&d.Status!=='cancelled';});
+  const aB=deals.length,aR=deals.reduce((a,d)=>a+(d.PreSST||0),0),aM=deals.length?deals.reduce((a,d)=>a+(d.Margin||0),0)/deals.length:0;
+  function prog(id,actual,target,isM){
+    const pv=target>0?Math.min(100,actual/target*100):0,col=pv>=100?'#00d4a0':pv>=70?'#f5a623':'#ff4d4d';
+    const disp=isM?parseFloat(actual).toFixed(2)+'%':actual===Math.round(actual)?actual:fmt(actual);
+    const tDisp=isM?target+'%':target>=1000?fmt(target):target;
+    document.getElementById(id).innerHTML=`
+      <div class="prog-lbl"><span>Actual: <b style="color:${col}">${disp}</b></span><span>Target: ${tDisp}</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${pv.toFixed(1)}%;background:${col}"></div></div>
+      <div class="prog-stat" style="color:${col}">${pv.toFixed(1)}% of target${pv>=100?' — Target hit!':''}</div>`;
+  }
+  prog('prog-bookings',aB,tB,false);prog('prog-revenue',aR,tR,false);prog('prog-margin',aM,tM,true);
+  const mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1];
+  document.getElementById('tgt-month-label').textContent=mn+' '+y+' · '+deals.length+' deal'+(deals.length!==1?'s':'');
+  const tbl=document.getElementById('monthly-tbl');
+  if(!deals.length){tbl.innerHTML=`<div style="color:var(--muted);font-size:12px;padding:12px 0">No deals in ${mn} ${y}. Add deals with matching dates in the Deals Database tab.</div>`;return;}
+  tbl.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <thead><tr style="border-bottom:1px solid var(--border2)">
+      ${['Client','Date','Pax','Pre-SST','Net Rev','Margin','Status'].map(h=>`<th style="text-align:left;padding:7px 9px;font-size:9px;color:var(--muted);letter-spacing:0.09em;text-transform:uppercase">${h}</th>`).join('')}
+    </tr></thead>
+    <tbody>${deals.map(d=>`<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:7px 9px;font-weight:600">${d.Client}</td>
+      <td style="padding:7px 9px;color:var(--muted)">${d.Date}</td>
+      <td style="padding:7px 9px;font-family:var(--mono)">${d.Pax}</td>
+      <td style="padding:7px 9px;font-family:var(--mono)">${fmt(d.PreSST)}</td>
+      <td style="padding:7px 9px;font-family:var(--mono);color:var(--accent)">${fmt(d.NetRev)}</td>
+      <td style="padding:7px 9px;font-family:var(--mono);color:${d.Margin>=35?'var(--accent)':'var(--danger)'}">${parseFloat(d.Margin||0).toFixed(2)}%</td>
+      <td style="padding:7px 9px"><span class="sp s-${d.Status}">${d.Status}</span></td>
+    </tr>`).join('')}
+    <tr style="border-top:2px solid var(--border2)">
+      <td style="padding:8px 9px;font-weight:700;color:var(--accent)" colspan="3">Month total</td>
+      <td style="padding:8px 9px;font-family:var(--mono);font-weight:700">${fmt(aR)}</td>
+      <td style="padding:8px 9px;font-family:var(--mono);font-weight:700;color:var(--accent)">${fmt(deals.reduce((a,d)=>a+(d.NetRev||0),0))}</td>
+      <td style="padding:8px 9px;font-family:var(--mono);font-weight:700;color:${aM>=35?'var(--accent)':'var(--danger)'}">${parseFloat(aM).toFixed(2)}% avg</td>
+      <td></td>
+    </tr>
+    </tbody></table>`;
+}
+
+// ── ADD DEAL ──
+async function addDeal(){
+  const client=gs('d-client');if(!client){alert('Please enter a client name.');return;}
+  const deal={client,date:gs('d-date'),pax:gv('d-pax'),dur:parseFloat(document.getElementById('d-dur').value),
+    preSST:gv('d-presst'),netRev:gv('d-netrev'),margin:gv('d-margin'),status:gs('d-status'),
+    prizes:gv('d-prizes'),banner:gv('d-banner'),tshirt:gv('d-tshirt'),mktg:gv('d-mktg'),team:gv('d-team'),notes:gs('d-notes')};
+  setLoading('Saving deal...');
+  try{
+    const data=await apiDeals('POST',deal);
+    _deals.unshift(data.deal);
+    document.getElementById('d-client').value='';document.getElementById('d-notes').value='';
+    renderDealsUI();renderTargets();
+  }catch(e){alert('Error saving deal: '+e.message);}
+  finally{setLoading(null);}
+}
+
+// ── EXPORT CSV ──
+function exportCSV(){
+  if(!_deals.length){alert('No deals to export.');return;}
+  const hdr=['Client','Date','Pax','Duration','Pre-SST (RM)','Net Revenue (RM)','Margin (%)','Prizes (RM)','Banner (RM)','T-Shirts (RM)','Marketing (RM)','Team (RM)','Status','Notes'];
+  const rows=_deals.map(d=>[d.Client,d.Date,d.Pax,(d.Duration||1)+'d',parseFloat(d.PreSST||0).toFixed(2),parseFloat(d.NetRev||0).toFixed(2),parseFloat(d.Margin||0).toFixed(2),parseFloat(d.Prizes||0).toFixed(2),parseFloat(d.Banner||0).toFixed(2),parseFloat(d.TShirts||0).toFixed(2),parseFloat(d.Marketing||0).toFixed(2),parseFloat(d.TeamBudget||0).toFixed(2),d.Status,d.Notes||''].map(v=>`"${v}"`).join(','));
+  const csv=[hdr.join(','),...rows].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='hrdc_deals_'+new Date().toISOString().split('T')[0]+'.csv';a.click();
+}
+
+// ── INIT ──
+async function init(){
+  const now=new Date();
+  document.getElementById('tgt-month').value=now.getMonth()+1;
+  document.getElementById('tgt-year').value=now.getFullYear();
+  document.getElementById('d-date').value=now.toISOString().split('T')[0];
+  render();
+  setLoading('Connecting to database...');
+  try{
+    const [dealData,tgtData]=await Promise.all([apiDeals('GET'),apiTargets('GET')]);
+    _deals=dealData.deals||[];
+    _targets=tgtData.targets||{};
+    renderDealsUI();
+  }catch(e){
+    document.getElementById('deals-empty').style.display='block';
+    document.getElementById('deals-empty').textContent='Could not connect to database. Check your Airtable config.';
+  }finally{setLoading(null);}
+}
+init();
+</script>
+</body>
+</html>
